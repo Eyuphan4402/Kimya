@@ -14,7 +14,7 @@ const Dashboard: React.FC<DashboardProps> = ({ chemicals, logs }) => {
   const [aiReport, setAiReport] = useState<string | null>(null);
   const [loadingAI, setLoadingAI] = useState(false);
 
-  // Sınırsız stokları (Saf Su vb.) Dashboard'dan tamamen eliyoruz
+  // Saf Su ve diğer sınırsız kaynakları Dashboard'daki TÜM istatistiklerden eliyoruz
   const finiteChemicals = chemicals.filter(c => !c.isInfinite);
   
   const totalStock = finiteChemicals.reduce((acc, curr) => acc + curr.currentStock, 0);
