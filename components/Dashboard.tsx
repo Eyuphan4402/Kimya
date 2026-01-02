@@ -14,7 +14,7 @@ const Dashboard: React.FC<DashboardProps> = ({ chemicals, logs }) => {
   const [aiReport, setAiReport] = useState<string | null>(null);
   const [loadingAI, setLoadingAI] = useState(false);
 
-  // Sınırsız stokları (Saf Su vb.) hesaplamalardan çıkarıyoruz
+  // Sınırsız stokları (Saf Su vb.) Dashboard'dan tamamen eliyoruz
   const finiteChemicals = chemicals.filter(c => !c.isInfinite);
   
   const totalStock = finiteChemicals.reduce((acc, curr) => acc + curr.currentStock, 0);
@@ -29,13 +29,18 @@ const Dashboard: React.FC<DashboardProps> = ({ chemicals, logs }) => {
 
   const generateReport = async () => {
     setLoadingAI(true);
-    const report = await getAIReport(chemicals);
-    setAiReport(report);
-    setLoadingAI(false);
+    try {
+      const report = await getAIReport(chemicals);
+      setAiReport(report);
+    } catch (err) {
+      setAiReport("Rapor alınırken bir sorun oluştu. Lütfen API anahtarınızı kontrol edin.");
+    } finally {
+      setLoadingAI(false);
+    }
   };
 
   return (
-    <div className="space-y-8 pb-10">
+    <div className="space-y-8 pb-10 animate-in">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white dark:bg-slate-900 p-8 rounded-5xl shadow-sm border border-slate-100 dark:border-slate-800">
           <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Takip Edilen Stok</p>
@@ -52,7 +57,7 @@ const Dashboard: React.FC<DashboardProps> = ({ chemicals, logs }) => {
           <p className="text-3xl font-bold dark:text-white">{logs.length} <span className="text-sm font-normal text-slate-400">parti</span></p>
         </div>
         <div className="bg-white dark:bg-slate-900 p-8 rounded-5xl shadow-sm border border-slate-100 dark:border-slate-800">
-          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Aktif Hammadde</p>
+          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Sınırlı Hammadde</p>
           <p className="text-3xl font-bold dark:text-white">{finiteChemicals.length}</p>
         </div>
       </div>
@@ -65,27 +70,33 @@ const Dashboard: React.FC<DashboardProps> = ({ chemicals, logs }) => {
               Stok Dağılımı (Sınırlı Kaynaklar)
             </h3>
             <div className="h-80 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={chartData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={80}
-                    outerRadius={120}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                  />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
+              {chartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={chartData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={80}
+                      outerRadius={120}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                    />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center text-slate-400">
+                  Gösterilecek stok verisi yok.
+                </div>
+              )}
             </div>
           </div>
 
@@ -95,7 +106,7 @@ const Dashboard: React.FC<DashboardProps> = ({ chemicals, logs }) => {
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold flex items-center gap-2">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.091 3.091L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.091 3.091ZM18.213 18.213 17.25 21l-.963-2.787a2.25 2.25 0 0 0-1.547-1.546L12 15.75l2.74-1.025a2.25 2.25 0 0 0 1.546-1.547l.963-2.787.963 2.787a2.25 2.25 0 0 0 1.546 1.547L21 15.75l-2.787.963a2.25 2.25 0 0 0-1.547 1.546ZM18.213 5.787 17.25 8.5l-.963-2.713a2.25 2.25 0 0 0-1.547-1.547L12 3.25l2.74-1.025a2.25 2.25 0 0 0 1.546-1.547l.963-2.713.963 2.713a2.25 2.25 0 0 0 1.546 1.547L21 3.25l-2.787.963a2.25 2.25 0 0 0-1.547 1.547Z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.091 3.091L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.091 3.091ZM18.213 18.213 17.25 21l-.963-2.787a2.25 2.25 0 0 0-1.547-1.546L12 15.75l2.74-1.025a2.25 2.25 0 0 0 1.546-1.547l.963-2.787.963 2.787a2.25 2.25 0 0 0 1.546 1.547L21 15.75l-2.787.963a2.25 2.25 0 0 0-1.547-1.546ZM18.213 5.787 17.25 8.5l-.963-2.713a2.25 2.25 0 0 0-1.547-1.547L12 3.25l2.74-1.025a2.25 2.25 0 0 0 1.546-1.547l.963-2.713.963 2.713a2.25 2.25 0 0 0 1.546 1.547L21 3.25l-2.787.963a2.25 2.25 0 0 0-1.547 1.547Z" />
                   </svg>
                   Gemini AI Stok Analizi
                 </h3>
