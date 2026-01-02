@@ -14,11 +14,14 @@ const Dashboard: React.FC<DashboardProps> = ({ chemicals, logs }) => {
   const [aiReport, setAiReport] = useState<string | null>(null);
   const [loadingAI, setLoadingAI] = useState(false);
 
-  const totalStock = chemicals.reduce((acc, curr) => acc + curr.currentStock, 0);
-  const criticalStockCount = chemicals.filter(c => c.currentStock <= c.minThreshold && !c.isInfinite).length;
+  // Sınırsız stokları (Saf Su vb.) hesaplamalardan çıkarıyoruz
+  const finiteChemicals = chemicals.filter(c => !c.isInfinite);
+  
+  const totalStock = finiteChemicals.reduce((acc, curr) => acc + curr.currentStock, 0);
+  const criticalStockCount = finiteChemicals.filter(c => c.currentStock <= c.minThreshold).length;
   const recentProductions = logs.slice(-5).reverse();
 
-  const chartData = chemicals.map(c => ({
+  const chartData = finiteChemicals.map(c => ({
     name: c.name,
     value: c.currentStock,
     color: c.color || COLORS[Math.floor(Math.random() * COLORS.length)]
@@ -35,7 +38,7 @@ const Dashboard: React.FC<DashboardProps> = ({ chemicals, logs }) => {
     <div className="space-y-8 pb-10">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white dark:bg-slate-900 p-8 rounded-5xl shadow-sm border border-slate-100 dark:border-slate-800">
-          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Toplam Stok</p>
+          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Takip Edilen Stok</p>
           <p className="text-3xl font-bold dark:text-white">{totalStock.toLocaleString()} <span className="text-sm font-normal text-slate-400">birim</span></p>
         </div>
         <div className="bg-white dark:bg-slate-900 p-8 rounded-5xl shadow-sm border border-slate-100 dark:border-slate-800">
@@ -50,7 +53,7 @@ const Dashboard: React.FC<DashboardProps> = ({ chemicals, logs }) => {
         </div>
         <div className="bg-white dark:bg-slate-900 p-8 rounded-5xl shadow-sm border border-slate-100 dark:border-slate-800">
           <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Aktif Hammadde</p>
-          <p className="text-3xl font-bold dark:text-white">{chemicals.length}</p>
+          <p className="text-3xl font-bold dark:text-white">{finiteChemicals.length}</p>
         </div>
       </div>
 
@@ -59,7 +62,7 @@ const Dashboard: React.FC<DashboardProps> = ({ chemicals, logs }) => {
           <div className="bg-white dark:bg-slate-900 p-8 rounded-5xl shadow-sm border border-slate-100 dark:border-slate-800 min-h-[400px]">
             <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
               <span className="w-1.5 h-6 bg-blue-600 rounded-full"></span>
-              Stok Dağılımı
+              Stok Dağılımı (Sınırlı Kaynaklar)
             </h3>
             <div className="h-80 w-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -110,7 +113,7 @@ const Dashboard: React.FC<DashboardProps> = ({ chemicals, logs }) => {
                 </div>
               ) : (
                 <p className="text-blue-100 opacity-80">
-                  Depo verimliliğini artırmak ve kritik stokları öngörmek için yapay zekadan profesyonel destek alın.
+                  Depo verimliliğini artırmak ve kritik stokları öngörmek için yapay zekadan profesyonel destek alın. (Sınırsız stoklar analize dahil edilmez)
                 </p>
               )}
             </div>
